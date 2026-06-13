@@ -232,6 +232,71 @@ body {
   align-items:flex-start; font-size:13px;
 }
 .cloze-answer-row:last-child { border-bottom:none; }
+
+/* ===== RESUME MODAL ===== */
+.modal-overlay {
+  position:fixed; top:0; left:0; right:0; bottom:0;
+  background:rgba(0,0,0,.45); z-index:100;
+  display:flex; align-items:center; justify-content:center;
+  padding:24px;
+}
+.modal-card {
+  background:var(--card); border-radius:14px; padding:28px 24px 24px;
+  max-width:360px; width:100%; text-align:center;
+  box-shadow:0 8px 32px rgba(0,0,0,.15);
+}
+.modal-card h2 { font-size:18px; color:var(--text); margin-bottom:8px; }
+.modal-card .modal-desc { font-size:13px; color:var(--sub); margin-bottom:6px; line-height:1.5; }
+.modal-card .modal-progress { font-size:12px; color:var(--gold-d); margin-bottom:20px; }
+.modal-btns { display:flex; flex-direction:column; gap:8px; }
+.modal-btns button {
+  width:100%; min-height:48px; border:none; border-radius:10px;
+  font-size:16px; font-weight:700; cursor:pointer;
+  touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+}
+.modal-btn-continue { background:var(--gold); color:#fff; }
+.modal-btn-continue:active { background:var(--gold-d); }
+.modal-btn-restart { background:var(--card); color:var(--muted); border:1px solid var(--border) !important; }
+.modal-btn-restart:active { background:var(--gold-l); }
+
+/* ===== ERROR BOOK ===== */
+.err-header {
+  display:flex; align-items:center; gap:12px; padding:8px 0 16px;
+}
+.err-header h1 { font-size:20px; color:var(--text); flex:1; }
+.err-group { margin-bottom:20px; }
+.err-group-title {
+  font-size:15px; font-weight:700; color:var(--text);
+  padding:10px 14px; background:var(--gold-l); border-radius:10px;
+  margin-bottom:8px;
+}
+.err-group-title span { color:var(--gold-d); font-weight:400; font-size:12px; margin-left:4px; }
+.err-item {
+  background:var(--card); border:1px solid var(--border); border-radius:10px;
+  padding:12px; margin-bottom:6px; font-size:13px;
+}
+.err-item-top { display:flex; gap:8px; align-items:flex-start; margin-bottom:6px; }
+.err-item-num { font-weight:700; color:var(--gold-d); flex-shrink:0; }
+.err-item-stem { flex:1; color:var(--text); line-height:1.5; }
+.err-item-answers { margin-bottom:4px; }
+.err-item-answers .ea-your { padding:2px 6px; border-radius:4px; background:var(--red-bg); color:var(--red); font-size:12px; margin-right:4px; }
+.err-item-answers .ea-correct { padding:2px 6px; border-radius:4px; background:var(--green-bg); color:var(--green); font-size:12px; }
+.err-item-explain { font-size:12px; color:var(--sub); line-height:1.5; margin-top:6px; padding-top:6px; border-top:1px solid var(--border); }
+.err-item-time { font-size:11px; color:var(--muted); margin-top:4px; }
+.err-empty { text-align:center; padding:60px 20px; color:var(--muted); font-size:15px; }
+.err-empty-icon { font-size:40px; margin-bottom:12px; }
+.err-clear-wrap { text-align:center; padding:20px 0 40px; }
+.err-clear-btn {
+  background:none; border:1px solid var(--border); border-radius:8px;
+  padding:8px 20px; font-size:13px; color:var(--muted); cursor:pointer;
+  touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+}
+.err-clear-btn:active { background:var(--red-bg); color:var(--red); border-color:var(--red); }
+.err-link {
+  text-align:center; padding:0 0 12px; font-size:13px;
+}
+.err-link a { color:var(--gold-d); text-decoration:none; cursor:pointer; }
+.err-link a:active { color:var(--text); }
 </style>
 </head>
 <body>
@@ -293,6 +358,72 @@ function recordAttempt(catId, score, wrongIds, prefix) {
   saveStats(prefix || 'jx_sc_practice');
 }
 
+// ===== SESSION SAVE/LOAD =====
+function saveSession(sessionKey) {
+  try {
+    var session = { timestamp: Date.now() };
+    if (ST.tab === 'sc') {
+      session.tab = 'sc';
+      session.catIdx = ST.catIdx;
+      session.mode = ST.mode;
+      session.shuffled = ST.shuffled;
+      session.curIdx = ST.curIdx;
+      session.answers = ST.answers;
+    } else {
+      session.tab = 'cloze';
+      session.catIdx = ST.catIdx;
+      session.mode = 'full';
+      session.clozeFills = ST.clozeFills;
+      session.clozeSubmitted = ST.clozeSubmitted;
+    }
+    localStorage.setItem(sessionKey || 'jx_sc_session', JSON.stringify(session));
+  } catch(e) {}
+}
+function loadSession(sessionKey) {
+  try {
+    var key = sessionKey || 'jx_sc_session';
+    var raw = localStorage.getItem(key);
+    if (!raw) return null;
+    var s = JSON.parse(raw);
+    if (Date.now() - s.timestamp > 86400000) {
+      localStorage.removeItem(key);
+      return null;
+    }
+    return s;
+  } catch(e) { return null; }
+}
+function clearSession(sessionKey) {
+  try { localStorage.removeItem(sessionKey || 'jx_sc_session'); } catch(e) {}
+}
+
+// ===== ERROR HISTORY =====
+function saveErrors(catId, errors, prefix) {
+  try {
+    var key = prefix || 'jx_sc_errors';
+    var raw = localStorage.getItem(key);
+    var all = raw ? JSON.parse(raw) : {};
+    var existing = all[catId] || [];
+    var byIdx = {};
+    existing.forEach(function(e) { byIdx[e.qIdx] = e; });
+    errors.forEach(function(e) { byIdx[e.qIdx] = e; });
+    all[catId] = Object.values(byIdx);
+    localStorage.setItem(key, JSON.stringify(all));
+  } catch(e) {}
+}
+function loadErrors(prefix) {
+  try {
+    var key = prefix || 'jx_sc_errors';
+    var raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : {};
+  } catch(e) { return {}; }
+}
+function countAllErrors(prefix) {
+  var all = loadErrors(prefix);
+  var n = 0;
+  for (var k in all) { n += all[k].length; }
+  return n;
+}
+
 // ===== DOM HELPER =====
 var app = document.getElementById('app');
 function h(tag, attrs, children) {
@@ -318,14 +449,111 @@ function h(tag, attrs, children) {
   return el;
 }
 
+// ===== RESUME / SESSION CHECK =====
+function checkAndResume() {
+  var sessionKey, prefix;
+  if (ST.tab === 'sc') {
+    sessionKey = 'jx_sc_session';
+    prefix = 'jx_sc_practice';
+  } else {
+    sessionKey = 'jx_cloze_session';
+    prefix = 'jx_cloze_practice';
+  }
+  loadStats(prefix);
+  var session = loadSession(sessionKey);
+  if (session) {
+    showResumeModal(session, sessionKey);
+  } else {
+    renderLanding();
+  }
+}
+
+function showResumeModal(session, sessionKey) {
+  var catName, progress;
+  if (session.tab === 'sc') {
+    var cat = QDATA[session.catIdx];
+    catName = cat ? cat.n : '单选';
+    var total = session.shuffled ? session.shuffled.length : 50;
+    var done = session.answers ? Object.keys(session.answers).length : 0;
+    progress = '第 ' + (session.curIdx + 1) + '/' + total + ' 题，已答 ' + done + ' 题';
+  } else {
+    var cat = CLOZE_DATA[session.catIdx];
+    catName = cat ? cat.n : '完形填空';
+    var filled = session.clozeFills ? Object.keys(session.clozeFills).length : 0;
+    progress = '已填 ' + filled + '/11 空';
+  }
+
+  var overlay = h('div', {className:'modal-overlay'});
+  var card = h('div', {className:'modal-card'}, [
+    h('h2', {}, '发现未完成的练习'),
+    h('div', {className:'modal-desc'}, catName),
+    h('div', {className:'modal-progress'}, progress),
+    h('div', {className:'modal-btns'}, [
+      h('button', {
+        className:'modal-btn-continue',
+        onclick: function() {
+          if (session.tab === 'sc') resumeSCQuiz(session);
+          else resumeClozeQuiz(session);
+        }
+      }, '继续练习'),
+      h('button', {
+        className:'modal-btn-restart',
+        onclick: function() {
+          clearSession(sessionKey);
+          renderLanding();
+          window.scrollTo(0, 0);
+        }
+      }, '重新开始'),
+    ]),
+  ]);
+  overlay.appendChild(card);
+  app.innerHTML = '';
+  app.appendChild(overlay);
+}
+
+function resumeSCQuiz(session) {
+  ST.tab = 'sc';
+  ST.view = 'quiz';
+  ST.catIdx = session.catIdx;
+  ST.mode = session.mode || 'full';
+  ST.shuffled = session.shuffled || [];
+  ST.curIdx = session.curIdx || 0;
+  ST.answers = session.answers || {};
+  ST.feedbackShown = false;
+  ST.clozeSubmitted = false;
+  ST.clozeFills = {};
+  ST.clozeSelectedBlank = -1;
+  ST.clozeSelectedBank = -1;
+  loadStats('jx_sc_practice');
+  renderSCQuiz();
+  window.scrollTo(0, 0);
+}
+
+function resumeClozeQuiz(session) {
+  ST.tab = 'cloze';
+  ST.view = 'quiz';
+  ST.catIdx = session.catIdx;
+  ST.mode = 'full';
+  ST.clozeFills = session.clozeFills || {};
+  ST.clozeSubmitted = session.clozeSubmitted || false;
+  ST.clozeSelectedBlank = -1;
+  ST.clozeSelectedBank = -1;
+  ST.answers = {};
+  loadStats('jx_cloze_practice');
+  renderClozeQuiz();
+  window.scrollTo(0, 0);
+}
+
 // ===== TAB SWITCH =====
 function switchTab(tab) {
   ST.tab = tab;
   ST.view = 'landing';
   ST.catIdx = -1;
-  if (tab === 'sc') loadStats('jx_sc_practice');
-  else loadStats('jx_cloze_practice');
-  renderLanding();
+  ST.clozeSubmitted = false;
+  ST.clozeFills = {};
+  ST.clozeSelectedBlank = -1;
+  ST.clozeSelectedBank = -1;
+  checkAndResume();
   window.scrollTo(0, 0);
 }
 
@@ -357,6 +585,12 @@ function renderSCLanding() {
     h('h1', {}, '江西中考单选 · 专项练习'),
     h('p', {}, '14个考点 × 50题  |  选你出错的考点，逐题练习'),
   ]));
+  var scErrCount = countAllErrors('jx_sc_errors');
+  if (scErrCount > 0) {
+    app.appendChild(h('div', {className:'err-link'}, [
+      h('a', {onclick: renderErrorBook}, '错题本（' + scErrCount + ' 题）'),
+    ]));
+  }
 
   var grid = h('div', {className:'cat-grid'});
   QDATA.forEach(function(cat, i) {
@@ -382,6 +616,12 @@ function renderClozeLanding() {
     h('h1', {}, '完形填空B · 模仿练习'),
     h('p', {}, '10篇选词填空  |  每篇11空  |  词库选词'),
   ]));
+  var clzErrCount = countAllErrors('jx_cloze_errors');
+  if (clzErrCount > 0) {
+    app.appendChild(h('div', {className:'err-link'}, [
+      h('a', {onclick: renderErrorBook}, '错题本（' + clzErrCount + ' 题）'),
+    ]));
+  }
 
   var grid = h('div', {className:'cat-grid'});
   CLOZE_DATA.forEach(function(cat, i) {
@@ -504,6 +744,7 @@ function selectSCAnswer(qIdx, letter) {
   if (ST.feedbackShown) return;
   ST.answers[qIdx] = letter;
   ST.feedbackShown = true;
+  saveSession('jx_sc_session');
   renderSCQuiz();
 }
 
@@ -511,6 +752,7 @@ function nextSCQuestion() {
   if (!ST.feedbackShown) return;
   ST.curIdx++;
   ST.feedbackShown = false;
+  saveSession('jx_sc_session');
   if (ST.curIdx >= ST.shuffled.length) {
     showSCResults();
   } else {
@@ -530,8 +772,24 @@ function showSCResults() {
     else wrongIds.push(qIdx);
   });
 
+  clearSession('jx_sc_session');
   if (ST.mode === 'full') {
     recordAttempt(cat.id, correct, wrongIds, 'jx_sc_practice');
+  }
+  // Save wrong answers to error book
+  if (wrongIds.length > 0) {
+    var scErrors = wrongIds.map(function(qIdx) {
+      var q = cat.q[qIdx];
+      return {
+        qIdx: qIdx,
+        stem: q.s,
+        userAnswer: ST.answers[qIdx],
+        correctAnswer: q.a,
+        explain: q.e,
+        time: new Date().toLocaleString('zh-CN')
+      };
+    });
+    saveErrors(cat.id, scErrors, 'jx_sc_errors');
   }
 
   var pct = total > 0 ? Math.round(correct / total * 100) : 0;
@@ -786,6 +1044,7 @@ function onBankClick(bankIdx) {
   ST.clozeFills[ST.clozeSelectedBlank] = bankIdx;
   ST.clozeSelectedBlank = -1;
   ST.clozeSelectedBank = -1;
+  saveSession('jx_cloze_session');
   renderClozeQuiz();
 
   // Auto-advance to next empty blank
@@ -801,6 +1060,24 @@ function onBankClick(bankIdx) {
 
 function submitCloze() {
   ST.clozeSubmitted = true;
+  clearSession('jx_cloze_session');
+  var cat = CLOZE_DATA[ST.catIdx];
+  var clozeErrors = [];
+  for (var b = 0; b < cat.answers.length; b++) {
+    if (ST.clozeFills[b] !== cat.answers[b]) {
+      clozeErrors.push({
+        qIdx: b,
+        stem: cat.passage,
+        userAnswer: cat.bank[ST.clozeFills[b]],
+        correctAnswer: cat.bank[cat.answers[b]],
+        explain: cat.explain[b],
+        time: new Date().toLocaleString('zh-CN')
+      });
+    }
+  }
+  if (clozeErrors.length > 0) {
+    saveErrors(cat.id, clozeErrors, 'jx_cloze_errors');
+  }
   renderClozeQuiz();
 }
 
@@ -811,15 +1088,108 @@ function goLanding() {
   ST.clozeFills = {};
   ST.clozeSelectedBlank = -1;
   ST.clozeSelectedBank = -1;
+  clearSession('jx_sc_session');
+  clearSession('jx_cloze_session');
   if (ST.tab === 'sc') loadStats('jx_sc_practice');
   else loadStats('jx_cloze_practice');
   renderLanding();
   window.scrollTo(0, 0);
 }
 
+// ===== ERROR BOOK VIEW =====
+function renderErrorBook() {
+  ST.view = 'errors';
+  var scErrs = loadErrors('jx_sc_errors');
+  var clzErrs = loadErrors('jx_cloze_errors');
+  var totalErrors = 0;
+  for (var k in scErrs) { totalErrors += scErrs[k].length; }
+  for (var k2 in clzErrs) { totalErrors += clzErrs[k2].length; }
+
+  app.innerHTML = '';
+  app.appendChild(renderTabBar());
+  app.appendChild(h('div', {className:'err-header'}, [
+    h('button', {className:'btn-back', onclick: goLanding}, '< 返回'),
+    h('h1', {}, '错题本'),
+  ]));
+
+  if (totalErrors === 0) {
+    app.appendChild(h('div', {className:'err-empty'}, [
+      h('div', {className:'err-empty-icon'}, ''),
+      '还没有错题记录，继续加油！',
+    ]));
+  } else {
+    // SC errors
+    QDATA.forEach(function(cat) {
+      var errs = scErrs[cat.id];
+      if (!errs || errs.length === 0) return;
+      app.appendChild(h('div', {className:'err-group'}, [
+        h('div', {className:'err-group-title'}, [cat.n, h('span', {}, ' — ' + errs.length + ' 题')]),
+      ]));
+      var group = app.lastChild;
+      errs.forEach(function(e) {
+        group.appendChild(h('div', {className:'err-item'}, [
+          h('div', {className:'err-item-top'}, [
+            h('span', {className:'err-item-num'}, '' + (e.qIdx + 1)),
+            h('span', {className:'err-item-stem'}, e.stem),
+          ]),
+          h('div', {className:'err-item-answers'}, [
+            h('span', {className:'ea-your'}, e.userAnswer),
+            h('span', {className:'ea-correct'}, e.correctAnswer),
+          ]),
+          h('div', {className:'err-item-explain'}, e.explain),
+          h('div', {className:'err-item-time'}, e.time || ''),
+        ]));
+      });
+    });
+    // Cloze errors
+    CLOZE_DATA.forEach(function(cat) {
+      var errs = clzErrs[cat.id];
+      if (!errs || errs.length === 0) return;
+      app.appendChild(h('div', {className:'err-group'}, [
+        h('div', {className:'err-group-title'}, [cat.n, h('span', {}, ' — ' + errs.length + ' 题')]),
+      ]));
+      var group = app.lastChild;
+      errs.forEach(function(e) {
+        group.appendChild(h('div', {className:'err-item'}, [
+          h('div', {className:'err-item-top'}, [
+            h('span', {className:'err-item-num'}, '空' + (e.qIdx + 1)),
+            h('span', {className:'err-item-stem'}, e.stem),
+          ]),
+          h('div', {className:'err-item-answers'}, [
+            h('span', {className:'ea-your'}, e.userAnswer),
+            h('span', {className:'ea-correct'}, e.correctAnswer),
+          ]),
+          h('div', {className:'err-item-explain'}, e.explain),
+          h('div', {className:'err-item-time'}, e.time || ''),
+        ]));
+      });
+    });
+
+    // Clear all button
+    app.appendChild(h('div', {className:'err-clear-wrap'}, [
+      h('button', {
+        className:'err-clear-btn',
+        onclick: function() {
+          if (confirm('确定要清空所有错题记录吗？此操作不可恢复。')) {
+            localStorage.removeItem('jx_sc_errors');
+            localStorage.removeItem('jx_cloze_errors');
+            renderErrorBook();
+          }
+        }
+      }, '清空错题本'),
+    ]));
+  }
+  window.scrollTo(0, 0);
+}
+
 // ===== INIT =====
-loadStats('jx_sc_practice');
-renderLanding();
+window.addEventListener('beforeunload', function() {
+  if (ST.view === 'quiz') {
+    if (ST.tab === 'sc') saveSession('jx_sc_session');
+    else saveSession('jx_cloze_session');
+  }
+});
+checkAndResume();
 
 </script>
 </body>
