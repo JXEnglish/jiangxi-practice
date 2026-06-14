@@ -100,6 +100,7 @@ body {
 .vocab-a-bank { background:var(--gold-l); border:1px solid var(--border); border-radius:10px; padding:10px 12px; margin-bottom:14px; position:sticky; top:8px; z-index:10; box-shadow:0 2px 8px rgba(0,0,0,.08); }
 .vocab-a-bank-label { font-size:11px; color:var(--muted); margin-bottom:6px; }
 .vocab-a-bank-words { display:flex; flex-wrap:wrap; gap:6px; }
+.bank-pill { display:inline-block; padding:6px 14px; border:1.5px solid var(--border); border-radius:20px; background:var(--card); font-size:13px; color:var(--text); font-family:Georgia,"Times New Roman",serif; font-weight:600; }
 .vocab-a-sentences { display:flex; flex-direction:column; gap:12px; }
 .vocab-a-sentence { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 14px; font-family:Georgia,"Times New Roman",serif; font-size:15px; line-height:1.7; }
 .vocab-a-sentence .s-num { display:inline-block; width:22px; height:22px; border-radius:50%; background:var(--gold-l); color:var(--gold-d); font-size:11px; font-weight:700; text-align:center; line-height:22px; margin-right:8px; flex-shrink:0; }
@@ -684,7 +685,7 @@ function renderVocabAQuiz() {
   var bankDiv = H('div', {className:'vocab-a-bank'}, [
     H('div', {className:'vocab-a-bank-label'}, '方框词库（每词限用一次，填入正确形式）'),
     H('div', {className:'vocab-a-bank-words'},
-      cat.bank.map(function(w) { return H('span', {className:'bank-ref-word'}, w); })
+      cat.bank.map(function(w) { return H('span', {className:'bank-pill'}, w); })
     ),
   ]);
   app.appendChild(bankDiv);
