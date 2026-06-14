@@ -190,6 +190,7 @@ function H(tag, attrs, children) {
   var el = document.createElement(tag);
   if (attrs) for (var k in attrs) {
     if (k === 'className') el.className = attrs[k];
+    else if (k === 'disabled') { if (attrs[k]) el.setAttribute('disabled', ''); }
     else if (k.startsWith('on')) el.addEventListener(k.slice(2).toLowerCase(), attrs[k]);
     else el.setAttribute(k, attrs[k]);
   }
