@@ -245,7 +245,7 @@ function H(tag, attrs, children) {
   if (attrs) for (var k in attrs) {
     if (k === 'className') el.className = attrs[k];
     else if (k.startsWith('on')) el.addEventListener(k.slice(2).toLowerCase(), attrs[k]);
-    else el.setAttribute(k, attrs[k]);
+    else if (attrs[k] !== false && attrs[k] != null) el.setAttribute(k, attrs[k]);
   }
   if (children) {
     if (typeof children === 'string') el.textContent = children;
