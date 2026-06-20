@@ -1,0 +1,11 @@
+# Build artifacts (source data, not deployed)
+*.py
+*.txt
+*.swift
+*.json
+!_progress.json
+!data/*.json
+!data/
+checkpoints/
+_progress.html
+_progress.json
