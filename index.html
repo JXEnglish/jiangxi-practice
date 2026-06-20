@@ -525,7 +525,7 @@ function renderSCQuiz() {
 
   // Stem
   var stemDiv = H('div', {className:'q-stem-display'});
-  var stemHtml = q.s.replace(/_(3,)/g, '<span class="blank"></span>');
+  var stemHtml = q.s.replace(/_{3,}/g, '<span class="blank"></span>');
   stemDiv.innerHTML = stemHtml;
   app.appendChild(stemDiv);
 
@@ -669,7 +669,7 @@ function showExamReview() {
     var userLetter = userAns || '未答';
     var item = H('div', {className:'review-item'}, [
       H('div', {className:'rv-num'}, '第' + (i + 1) + '题 · ' + (isRight ? '✅ 正确' : '❌ 错误')),
-      H('div', {className:'rv-stem'}, q.s.replace(/_(3,)/g, '____')),
+      H('div', {className:'rv-stem'}, q.s.replace(/_{3,}/g, '____')),
       H('div', {className:'rv-answer'}, [
         H('span', {style:'color:' + (isRight ? 'var(--green)' : 'var(--red)')}, '你的答案: ' + userLetter),
         !isRight ? H('span', {style:'color:var(--green);margin-left:8px;'}, '正确答案: ' + q.a) : null,
@@ -906,7 +906,7 @@ function renderVocabAQuiz() {
   cat.sentences.forEach(function(sent, si) {
     var sentDiv = H('div', {className:'vocab-a-sentence'});
     sentDiv.appendChild(H('span', {className:'s-num'}, '' + (si + 1)));
-    var parts = sent.s.split(/_(3,)/g);
+    var parts = sent.s.split(/_{3,}/g);
     parts.forEach(function(part, pi) {
       if (pi > 0) {
         var input = H('input', {
