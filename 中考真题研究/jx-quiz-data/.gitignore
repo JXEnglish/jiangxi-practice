@@ -1,5 +1,6 @@
 # Build artifacts (source data, not deployed)
 *.py
+!build_spa.py
 *.txt
 *.swift
 *.json
