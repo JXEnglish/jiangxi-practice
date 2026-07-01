@@ -55,7 +55,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino 
 .card.open .card-arrow { transform: rotate(180deg); }
 
 /* Tables */
-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 12px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 12px 0; display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 th { background: var(--card-dark); padding: 10px 12px; text-align: left; font-weight: 600; font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.03em; border-bottom: 2px solid var(--border); }
 td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
 tr:hover td { background: rgba(184,160,128,0.06); }
@@ -84,12 +84,33 @@ td:first-child { font-weight: 600; white-space: nowrap; }
 .hidden { display: none !important; }
 
 /* Responsive */
-@media (max-width: 640px) {
-  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
-  .header { padding: 24px 16px 20px; }
+@media (max-width: 768px) {
+  .header { padding: 20px 12px 16px; position: relative; }
   .header h1 { font-size: 18px; }
-  table { font-size: 12px; }
-  th, td { padding: 8px; }
+  .header p { font-size: 12px; }
+  .tabs { top: 0; padding: 8px 10px; gap: 3px; }
+  .tab { padding: 6px 12px; font-size: 12px; border-radius: 16px; }
+  .container { padding: 12px 10px; }
+  .section-title { font-size: 15px; }
+  .card { padding: 14px; margin-bottom: 8px; }
+  .card-header h3 { font-size: 14px; }
+  .card-body { font-size: 13px; }
+  .card-body p { margin-bottom: 8px; line-height: 1.6; }
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; gap: 8px; }
+  table { font-size: 11px; }
+  th, td { padding: 6px 8px; }
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -10px; padding: 0 10px; }
+  .insight-box { padding: 10px 12px; font-size: 12px; margin: 8px 0; }
+  blockquote { padding: 6px 12px; font-size: 13px; }
+  .tag { font-size: 10px; padding: 2px 6px; }
+  .badge { width: 6px; height: 6px; }
+  .card-arrow { font-size: 14px; padding: 4px; }
+}
+@media (max-width: 400px) {
+  .header h1 { font-size: 16px; }
+  .tab { padding: 5px 10px; font-size: 11px; }
+  .card { padding: 10px; }
+  .card-header h3 { font-size: 13px; }
 }
 
 /* Badge */
@@ -695,6 +716,16 @@ function filterQuickCards() {
 document.querySelectorAll('.search-box').forEach(input => {
   input.addEventListener('click', e => e.stopPropagation());
 });
+
+// Deep linking: URL hash opens the right tab
+function handleHash() {
+  const h = location.hash.replace('#tab-', '');
+  if (['framework','subjects','curriculum','career','quick'].includes(h)) {
+    switchTab(h);
+  }
+}
+window.addEventListener('hashchange', handleHash);
+window.addEventListener('DOMContentLoaded', handleHash);
 </script>
 
 </body>
