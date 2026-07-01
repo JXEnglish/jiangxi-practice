@@ -148,6 +148,41 @@ blockquote { border-left: 2px solid var(--gold); padding: 8px 16px; margin: 12px
   <div class="section-title">六大核心能力</div>
   <div class="section-subtitle">能力不是抽象概念，是具体到学科、具体到年级、具体到一个动作。每个家长的问题，都能在这里找到一个"今晚就能试"的答案。</div>
 
+  <!-- 家长自测 -->
+  <div class="card" style="background:linear-gradient(135deg,#f5f0e8 0%,#fdfbf7 100%);border:2px solid var(--gold)">
+    <div class="card-header" onclick="this.parentElement.classList.toggle('open')">
+      <h3>🧭 家长自测：我家孩子该练哪个能力？</h3><span class="card-arrow">▾</span>
+    </div>
+    <div class="card-body">
+      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin-bottom:16px">
+        <div style="flex:1;min-width:140px">
+          <label style="font-size:13px;color:var(--text-secondary);display:block;margin-bottom:4px">孩子年级</label>
+          <select id="selfGrade" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:#fff;color:var(--text)">
+            <option value="">-- 选择年级 --</option>
+            <option value="low-elem">小学低段（1-3年级）</option>
+            <option value="high-elem">小学高段（4-6年级）</option>
+            <option value="junior">初中（7-9年级）</option>
+            <option value="senior">高中</option>
+          </select>
+        </div>
+        <div style="flex:1;min-width:140px">
+          <label style="font-size:13px;color:var(--text-secondary);display:block;margin-bottom:4px">最想提升的能力</label>
+          <select id="selfAbility" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:#fff;color:var(--text)">
+            <option value="">-- 选择能力 --</option>
+            <option value="critical">批判性思维——有自己的判断</option>
+            <option value="logical">逻辑推理——说话有条理</option>
+            <option value="info">信息提取——读得懂重点</option>
+            <option value="system">系统思维——看问题不片面</option>
+            <option value="creative">创造性思维——有想法有创意</option>
+            <option value="meta">元认知——自己知道怎么学</option>
+          </select>
+        </div>
+        <button onclick="runSelfTest()" style="padding:9px 24px;background:var(--gold);color:#fff;border:none;border-radius:10px;font-size:14px;cursor:pointer;white-space:nowrap">查看建议 →</button>
+      </div>
+      <div id="selfTestResult" style="display:none;padding:16px;background:#fff;border-radius:8px;border:1px solid var(--border);line-height:1.8"></div>
+    </div>
+  </div>
+
   <!-- 能力1 -->
   <div class="card" onclick="this.classList.toggle('open')">
     <div class="card-header">
@@ -727,6 +762,56 @@ function filterQuickCards() {
 document.querySelectorAll('.search-box').forEach(input => {
   input.addEventListener('click', e => e.stopPropagation());
 });
+
+// Parent self-test
+function runSelfTest() {
+  const grade = document.getElementById('selfGrade').value;
+  const ab = document.getElementById('selfAbility').value;
+  const result = document.getElementById('selfTestResult');
+  if (!grade || !ab) {
+    result.style.display = 'block';
+    result.innerHTML = '<span style="color:#b85450">请先选择年级和能力</span>';
+    return;
+  }
+  const recs = {
+    'low-elem': {
+      critical: '这个阶段先不急批判性思维（形式运算还没启动）。你现在要做的是：多问"你觉得他说得对吗？为什么？"，让孩子习惯"给我一个理由"这件事。',
+      logical: '一年级开始：把故事卡片打乱，让孩子重新排序。这比做口算更能训练逻辑——因为他在学"事件之间的因果链"。',
+      info: '每天读一本绘本，读完后让孩子说三句话：谁、做了什么、结果是怎样。不是考记忆，是在帮他建立"提取关键信息"的大脑通路。',
+      creative: '整个小学阶段的核心任务是"积累原材料"——多旅行、多读不同类型的书、多接触不同的活动。创造性不是教出来的，是原材料多了以后自己发酵的。',
+      system: '种一盆豆子，每天记录高度、叶子数量、颜色变化。告诉他：豆子在变，阳光在变，水在变——所有东西都在互相影响。',
+      meta: '每天问一句："今天哪道题最难？"不是检查作业，是帮他在大脑里标记"哪里我还不太懂"——元认知的起点。'
+    },
+    'high-elem': {
+      critical: '开始引入"事实vs观点"——报纸上的新闻是事实吗？妈妈说的"这个好看"是事实吗？不需要理论，就问这两个词的区别。',
+      logical: '应用题是最好的逻辑训练场。不是问"等于多少"，是问"你从题目里读到了哪些已知条件？它们之间什么关系？你打算先算什么后算什么？"',
+      info: '给他看两则关于同一件事的新闻（可以是你编的），问他"这两篇文章说的是一件事吗？哪里一样？哪里不一样？"这是多源信息整合的起点。',
+      creative: '给同一篇故事的结尾换三种写法——最搞笑的、最吓人的、最浪漫的。不是为了写作，是为了让他知道"同一个起点可以有不同的终点"。',
+      system: '带他一起看你家一个月的水电账单——为什么冬季用电多？哪些电器最耗电？如果少开一小时空调会怎样？直接拉数据，比什么系统思维练习都有效。',
+      meta: '开始要求错题本——重点不是抄题，是写"我错在哪一步"。用三色笔：黑色抄题、红色写错误步骤、蓝色写正确思路。'
+    },
+    'junior': {
+      critical: '阅读理解完形填空后，多问一句"另外三个选项错在哪"——选对可能是猜的，能说出每个错误选项的错因才叫读懂了。这是批判性思维最直接的训练。',
+      logical: '几何证明不要求证出来的结果，要求他把每一步推理的理由说清楚："因为...所以...根据..."。逻辑推理不是脑子里有答案就行，是每一步都能讲给别人听。',
+      info: '课本是最好的训练材料——翻到目录页，让他用三句话说出这本书打算讲什么。然后每学完一章，回到目录标注"这一章的关键信息是什么"。',
+      system: '学完生态系统一课，画一张"本地公园的食物网"——不画书上的，画你楼下公园的。从观察到抽象，系统思维才不是纸上谈兵。',
+      creative: '不是问"你怎么写作文"，是问"你注意到了什么"。初中写作最大的问题是素材不够——帮他在日常生活里积累观察："今天你在学校看到了什么别人可能没注意的东西？"',
+      meta: '全面帮——错题归类、策略反思。每月抽一次，把所有错题按"知识点混淆/审题失误/方法选错/不知道"四类分类。四类对应四种完全不同的补救策略。'
+    },
+    'senior': {
+      critical: '开始训练"立场分析"——读一篇议论文后先不同不同意对方的观点，先问"作者的预设立场是什么？他用了什么修辞策略？如果换一个立场，这段话会怎么改写？"',
+      logical: '数学归纳法、反证法——这些不是考试技巧，是"换个角度推一遍"的思维工具。要求一题多解后比较哪种更简洁，这是在训练选择最优推理路径。',
+      info: '非连续性文本——同时读文字、图表、数据，提取核心信息并交叉验证。可以自己找材料练：一篇社论+一张统计图+一段采访，问"从这三份材料里你读到了什么共同信息？"',
+      system: '历史+地理+政治三科放在一起看同一个问题（比如"为什么上海会成为金融中心？"），要求他从地形、历史条约、经济政策三个维度同时分析。这是真正的高阶系统思维。',
+      creative: '不再依赖模板。每篇文章开头换三种方式写，比较哪一种最适合这篇。写作的创造性不是"写得不一样"，是"写得最合适"。',
+      meta: '这个阶段元认知应该接近独立运行——他自己应该知道哪科最弱、弱在哪、怎么补。如果高三复盘还停留在"粗心了"，说明元认知完全没建立。你需要陪他做一次深度错题诊断。'
+    }
+  };
+  const map = {critical:'批判性思维',logical:'逻辑推理',info:'信息提取',system:'系统思维',creative:'创造性思维',meta:'元认知'};
+  const advice = recs[grade]?.[ab] || '请选择年级和能力后查看建议';
+  result.style.display = 'block';
+  result.innerHTML = '<strong style="color:var(--gold-dark)">' + map[ab] + ' · ' + document.getElementById('selfGrade').selectedOptions[0].text + '</strong><br><br>' + advice;
+}
 
 // Deep linking: URL hash opens the right tab
 function handleHash() {
