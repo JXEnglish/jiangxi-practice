@@ -1,0 +1,24 @@
+# ⚠️ 本仓库根目录 = GitHub Pages 站点根目录（见 .github/workflows/pages.yml 的 path: .）
+# 提交进本仓库的任何文件都会公开在 https://jxenglish.github.io/jiangxi-practice/
+# 因此采用「白名单」：默认忽略一切，只放行要发布的东西。
+# 将来新增要发布的内容，必须在下面补一行 !/路径，否则不会被提交。
+
+/*
+
+!/.
+!/.gitignore
+!/.github/
+!/index.html
+!/share-card.png
+!/能力翻译数据底座.html
+
+# 中考 SPA：只放行 jx-quiz-data，同目录下其他素材不外发
+!/中考真题研究/
+/中考真题研究/*
+!/中考真题研究/jx-quiz-data/
+
+# 持仓、交易、资产数据 —— 私人，只进私有备份仓库 claude-memory
+基金数据/
+
+# 系统文件
+.DS_Store
